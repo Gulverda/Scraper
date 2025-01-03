@@ -86,14 +86,16 @@ Follow the steps below to set up the project environment:
   - scikit-learn - For machine learning tasks (classification and regression).
 
 
-##Outputs
+## Outputs
   - Scraped Data: Saved in car_listings.json.
   - Visualizations: Generated as images displayed in the terminal or saved as files.
   - Model Metrics:
     - Classification: Confusion matrix, classification report.
     - Regression: MSE, R² score, and scatter plots.
+
+## Results
 ![Project](./Results.png)
-      
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
