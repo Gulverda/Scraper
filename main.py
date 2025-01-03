@@ -29,32 +29,44 @@ for page_num in range(1, 6):
 
             for car in cars:
                 try:
-                    car_link = car.find('a', class_='with_hash1')['href']
-                    car_name = car.find('div', class_='titleCatalog').get_text(strip=True)
-                    car_price = car.find('div', class_='priceCatalog').get_text(strip=True).replace('\n', '').strip()
-                    car_year = car.find('div', class_='paramCatalog').get_text(strip=True).split(',')[0]
-                    car_mileage = car.find('div', class_='item speedometer').get_text(strip=True)
-                    car_transmission = car.find('div', class_='item transmission').get_text(strip=True)
-                    car_fuel = car.find('div', class_='item gas').get_text(strip=True)
-                    car_image = car.find('img')['src']
-                    car_location = car.find('div', class_='paramCatalog').get_text(strip=True).split(',')[1]
+                    car_link = car.find('a', class_='with_hash1')
+                    car_name = car.find('div', class_='titleCatalog')
+                    car_price = car.find('div', class_='priceCatalog')
+                    car_year = car.find('div', class_='paramCatalog')
+                    car_mileage = car.find('div', class_='item speedometer')
+                    car_transmission = car.find('div', class_='item transmission')
+                    car_fuel = car.find('div', class_='item gas')
+                    car_image = car.find('img')
+                    car_location = car.find('div', class_='paramCatalog')
 
-                    #Clean up price to extract numeric value
-                    car_price = car_price.replace('L', '').replace(' ', '').strip()
+                    # Check if elements exist before accessing them
+                    if car_link and car_name and car_price and car_year and car_mileage and car_transmission and car_fuel and car_image and car_location:
+                        car_link = car_link.get('href')
+                        car_name = car_name.get_text(strip=True)
+                        car_price = car_price.get_text(strip=True).replace('\n', '').strip()
+                        car_year = car_year.get_text(strip=True).split(',')[0]
+                        car_mileage = car_mileage.get_text(strip=True)
+                        car_transmission = car_transmission.get_text(strip=True)
+                        car_fuel = car_fuel.get_text(strip=True)
+                        car_image = car_image['src']
+                        car_location = car_location.get_text(strip=True).split(',')[1]
 
-                    car_data = {
-                        'name': car_name,
-                        'price': car_price,
-                        'year': car_year,
-                        'mileage': car_mileage,
-                        'transmission': car_transmission,
-                        'fuel': car_fuel,
-                        'location': car_location,
-                        'image_url': f"https://www.ap.ge{car_image}",
-                        'link': f"https://www.ap.ge{car_link}"
-                    }
+                        # Clean up price to extract numeric value
+                        car_price = car_price.replace('L', '').replace(' ', '').strip()
 
-                    car_listings.append(car_data)
+                        car_data = {
+                            'name': car_name,
+                            'price': car_price,
+                            'year': car_year,
+                            'mileage': car_mileage,
+                            'transmission': car_transmission,
+                            'fuel': car_fuel,
+                            'location': car_location,
+                            'image_url': f"https://www.ap.ge{car_image}",
+                            'link': f"https://www.ap.ge{car_link}"
+                        }
+
+                        car_listings.append(car_data)
 
                 except AttributeError as e:
                     print(f"Error extracting data from a car listing: {e}")
@@ -65,7 +77,7 @@ for page_num in range(1, 6):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching page {page_num}: {e}")
 
-#Save with Json
+# Save with JSON
 with open('car_listings.json', 'w', encoding='utf-8') as json_file:
     json.dump(car_listings, json_file, ensure_ascii=False, indent=4)
 
@@ -74,14 +86,14 @@ print("Data has been saved to car_listings.json")
 # Step 1: Create a DataFrame for analysis
 df = pd.DataFrame(car_listings)
 
-#Data cleaning and preprocessing
-#Convert price to numeric
+# Data cleaning and preprocessing
+# Convert price to numeric
 df['price'] = pd.to_numeric(df['price'], errors='coerce')
 
-#Handle missing data and clean features
+# Handle missing data and clean features
 df.dropna(subset=['price', 'fuel', 'transmission'], inplace=True)
 
-#Clean Mileage
+# Clean Mileage
 def clean_mileage(mileage):
     # Remove spaces and handle various patterns using regex
     mileage = mileage.replace(' ', '').lower()
@@ -105,51 +117,47 @@ def clean_mileage(mileage):
         return None
 
 
-#Apply the cleaning function to the mileage column
+# Apply the cleaning function to the mileage column
 df['mileage'] = df['mileage'].apply(clean_mileage)
 
-#Label encode categorical variables
+# Label encode categorical variables
 label_encoder = LabelEncoder()
 df['fuel'] = label_encoder.fit_transform(df['fuel'])
 df['transmission'] = label_encoder.fit_transform(df['transmission'])
 
-#Classify prices into categories: High, Medium, Low
+# Classify prices into categories: High, Medium, Low
 df['price_category'] = pd.cut(df['price'], bins=[0, 20000, 50000, 1000000], labels=['Low', 'Medium', 'High'])
 
-#Features and target variable
+# Features and target variable
 X = df[['mileage', 'fuel', 'transmission']]
 y = df['price_category']
 
-#Split data into training and testing sets
+# Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-#Model Training - Using Random Forest Classifier
+# Model Training - Using Random Forest Classifier
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-#Predictions and Eval
+# Predictions and Eval
 y_pred = model.predict(X_test)
 
-#Classification Report
+# Classification Report
 print("Classification Report:")
 print(classification_report(y_test, y_pred, zero_division=1))
 
-#Confusion Matrix
+# Confusion Matrix
 print("Confusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
-#Visualization
-y_test = ['High', 'Low', 'Medium', 'High', 'Medium', 'Low', 'High', 'High', 'Medium', 'Low']
-y_pred = ['High', 'Low', 'High', 'High', 'Low', 'Low', 'High', 'Medium', 'Medium', 'High']
-
-#Generate confusion matrix
+# Visualization
 cm = confusion_matrix(y_test, y_pred, labels=['High', 'Low', 'Medium'])
 
-#Classification
+# Classification
 print("Classification Report:")
 print(classification_report(y_test, y_pred))
 
-#Matrix Visualization
+# Matrix Visualization
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['High', 'Low', 'Medium'], yticklabels=['High', 'Low', 'Medium'])
 plt.title('Confusion Matrix')
@@ -157,30 +165,28 @@ plt.xlabel('Predicted Labels')
 plt.ylabel('True Labels')
 plt.show()
 
-
-
 # Use `price` as the target variable for regression
 X_reg = df[['mileage', 'fuel', 'transmission']]  # Features
 y_reg = df['price']  # Target
 
-#Split data into training and testing sets for regression
+# Split data into training and testing sets for regression
 X_train_reg, X_test_reg, y_train_reg, y_test_reg = train_test_split(X_reg, y_reg, test_size=0.2, random_state=42)
 
-#Train the regression model
+# Train the regression model
 reg_model = LinearRegression()
 reg_model.fit(X_train_reg, y_train_reg)
 
-#Predictions
+# Predictions
 y_pred_reg = reg_model.predict(X_test_reg)
 
-#Evaluate the regression model
+# Evaluate the regression model
 mse = mean_squared_error(y_test_reg, y_pred_reg)
 r2 = r2_score(y_test_reg, y_pred_reg)
 
 print(f"Mean Squared Error (MSE): {mse}")
 print(f"R-squared (R2) Score: {r2}")
 
-#Visualize predictions vs. actual values
+# Visualize predictions vs. actual values
 plt.figure(figsize=(10, 6))
 plt.scatter(y_test_reg, y_pred_reg, alpha=0.7, color='blue')
 plt.title('Actual Prices vs Predicted Prices')
@@ -189,7 +195,7 @@ plt.ylabel('Predicted Prices')
 plt.grid(True)
 plt.show()
 
-#Feature Importance (Optional for Regression Models)
+# Feature Importance (Optional for Regression Models)
 coefficients = pd.DataFrame({
     'Feature': X_reg.columns,
     'Coefficient': reg_model.coef_
@@ -198,9 +204,7 @@ coefficients = pd.DataFrame({
 print("Feature Importance (Linear Regression Coefficients):")
 print(coefficients)
 
-
-
-#Bar Chart: Distribution of Fuel Types
+# Bar Chart: Distribution of Fuel Types
 fuel_counts = df['fuel'].value_counts()
 
 plt.figure(figsize=(10, 6))
@@ -211,7 +215,7 @@ plt.ylabel('Number of Cars')
 plt.xticks(rotation=45)
 plt.show()
 
-#Histogram: Distribution of Car Prices
+# Histogram: Distribution of Car Prices
 plt.figure(figsize=(10, 6))
 plt.hist(df['price'].dropna(), bins=15, color='orange', edgecolor='black', alpha=0.7)
 plt.title('Distribution of Car Prices')
@@ -220,7 +224,7 @@ plt.ylabel('Number of Cars')
 plt.grid(True)
 plt.show()
 
-#Pie Chart: Transmission Type Distribution
+# Pie Chart: Transmission Type Distribution
 transmission_counts = df['transmission'].value_counts()
 
 plt.figure(figsize=(8, 8))
