@@ -44,10 +44,10 @@ Follow the steps below to set up the project environment:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/car-listings-scraper.git
+   git clone https://github.com/Gulverda/Scraper.git
 2. Navigate to the project directory:
   ```bash
-  cd car-listings-scraper
+  cd Scraper
   ```
 3. Install dependencies:
   ```
