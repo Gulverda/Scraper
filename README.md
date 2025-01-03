@@ -92,6 +92,7 @@ Follow the steps below to set up the project environment:
   - Model Metrics:
     - Classification: Confusion matrix, classification report.
     - Regression: MSE, R² score, and scatter plots.
+  ![Project](./Results.png)
       
 ## License
 
